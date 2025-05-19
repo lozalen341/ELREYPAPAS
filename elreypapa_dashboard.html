@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Rey Papa - Sistema de Gestión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        .sidebar-closed {
+            transform: translateX(-100%);
+        }
+        .active-link {
+            background-color: #4f46e5; /* bg-indigo-600 */
+            color: white;
+        }
+        .active-link i {
+            color: white;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem; /* p-6 */
+        }
+        .btn {
+            padding: 0.75rem 1.5rem; /* py-3 px-6 */
+            border-radius: 0.5rem; /* rounded-lg */
+            font-weight: 500; /* font-medium */
+            transition: background-color 0.2s ease-in-out;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* bg-indigo-600 */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca; /* hover:bg-indigo-700 */
+        }
+        .btn-secondary {
+            background-color: #e5e7eb; /* bg-gray-200 */
+            color: #374151; /* text-gray-700 */
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db; /* hover:bg-gray-300 */
+        }
+        .btn-danger {
+            background-color: #ef4444; /* bg-red-500 */
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626; /* hover:bg-red-600 */
+        }
+        .modal {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            max-height: 90vh;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c4c4c4; /* A bit darker for better visibility */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1; /* Darken on hover */
+        }
+        .form-input, .form-select, .form-textarea {
+            border-color: #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.5rem 0.75rem; /* py-2 px-3 */
+            width: 100%;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            border-color: #4f46e5; /* focus:border-indigo-500 */
+            box-shadow: 0 0 0 2px #a5b4fc; /* focus:ring-indigo-500 focus:ring-opacity-50 */
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.25rem; /* mb-1 */
+            font-weight: 500; /* font-medium */
+            color: #374151; /* text-gray-700 */
+        }
+        /* Spinner for loading state */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4f46e5; /* Indigo-600 */
+            animation: spin 1s ease infinite;
+            margin: 20px auto; /* Center spinner */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Table action buttons styling */
+        .action-btn {
+            width: 2.25rem; /* w-9 */
+            height: 2.25rem; /* h-9 */
+            border-radius: 9999px; /* rounded-full */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .action-btn i {
+            font-size: 0.875rem; /* text-sm */
+        }
+        .action-btn-edit {
+            background-color: #34d399; /* bg-green-500 */
+            color: white;
+        }
+        .action-btn-edit:hover {
+            background-color: #10b981; /* hover:bg-green-600 */
+        }
+        .action-btn-delete {
+            background-color: #ef4444; /* bg-red-500 */
+            color: white;
+        }
+        .action-btn-delete:hover {
+            background-color: #dc2626; /* hover:bg-red-600 */
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside id="sidebar" class="sidebar bg-gray-800 text-gray-100 w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform md:relative md:translate-x-0 z-30">
+        <a href="#dashboard" class="text-white flex items-center space-x-2 px-4">
+            <i class="fas fa-crown fa-2x"></i>
+            <span class="text-2xl font-extrabold">El Rey Papa</span>
+        </a>
+        <nav>
+            <a href="#dashboard" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white active-link">
+                <i class="fas fa-tachometer-alt w-6 mr-2"></i> <span>Resumen</span>
+            </a>
+            <a href="#productos" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-boxes w-6 mr-2"></i> <span>Productos</span>
+            </a>
+            <a href="#categorias" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-tags w-6 mr-2"></i> <span>Categorías</span>
+            </a>
+            <a href="#clientes" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-users w-6 mr-2"></i> <span>Clientes</span>
+            </a>
+            <a href="#proveedores" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-truck-loading w-6 mr-2"></i> <span>Proveedores</span>
+            </a>
+            <a href="#compras" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-shopping-cart w-6 mr-2"></i> <span>Compras</span>
+            </a>
+            <a href="#ventas" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-cash-register w-6 mr-2"></i> <span>Ventas</span>
+            </a>
+            <a href="#inventario" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-warehouse w-6 mr-2"></i> <span>Inventario</span>
+            </a>
+            <a href="#caja" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-cash-register w-6 mr-2"></i> <span>Caja</span>
+            </a>
+            <a href="#usuarios" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
+                <i class="fas fa-user-cog w-6 mr-2"></i> <span>Usuarios</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div id="mainContent" class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow-md p-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <button id="sidebarToggle" class="text-gray-500 focus:outline-none md:hidden mr-4">
+                    <i class="fas fa-bars fa-lg"></i>
+                </button>
+                <h1 id="pageTitle" class="text-xl font-semibold text-gray-700">Resumen</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button class="relative text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-bell fa-lg"></i>
+                    <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                </button>
+                <div class="relative">
+                    <button class="flex items-center space-x-2 focus:outline-none">
+                        <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=A" alt="Avatar de Usuario" class="w-8 h-8 rounded-full">
+                        <span class="text-gray-700">Admin</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                    </button>
+                    </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+            <div id="messageContainer" class="mb-4"></div>
+
+            <section id="dashboard" class="page-section">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Resumen del Sistema</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="card"><div class="flex items-center"><div class="p-3 rounded-full bg-blue-500 text-white mr-4"><i class="fas fa-dollar-sign fa-2x"></i></div><div><p class="text-sm text-gray-500">Ventas Hoy</p><p class="text-2xl font-bold text-gray-800">$1,250.00</p></div></div></div>
+                    <div class="card"><div class="flex items-center"><div class="p-3 rounded-full bg-green-500 text-white mr-4"><i class="fas fa-users fa-2x"></i></div><div><p class="text-sm text-gray-500">Clientes Nuevos</p><p class="text-2xl font-bold text-gray-800">15</p></div></div></div>
+                    <div class="card"><div class="flex items-center"><div class="p-3 rounded-full bg-yellow-500 text-white mr-4"><i class="fas fa-box-open fa-2x"></i></div><div><p class="text-sm text-gray-500">Productos Bajos Stock</p><p class="text-2xl font-bold text-gray-800">8</p></div></div></div>
+                    <div class="card"><div class="flex items-center"><div class="p-3 rounded-full bg-red-500 text-white mr-4"><i class="fas fa-exclamation-triangle fa-2x"></i></div><div><p class="text-sm text-gray-500">Alertas Pendientes</p><p class="text-2xl font-bold text-gray-800">3</p></div></div></div>
+                </div>
+            </section>
+
+            <section id="productos" class="page-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-800">Gestión de Productos</h2>
+                    <button id="btnNuevoProducto" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Nuevo Producto</button>
+                </div>
+                <div class="card">
+                    <div id="productosLoadingSpinner" class="hidden spinner"></div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white rounded-lg">
+                            <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <tr>
+                                    <th class="py-3 px-6 text-left">Código</th>
+                                    <th class="py-3 px-6 text-left">Nombre</th>
+                                    <th class="py-3 px-6 text-center">P. Venta</th>
+                                    <th class="py-3 px-6 text-center">Stock</th>
+                                    <th class="py-3 px-6 text-left">Categoría</th>
+                                    <th class="py-3 px-6 text-left">Proveedor</th>
+                                    <th class="py-3 px-6 text-center">Estado</th>
+                                    <th class="py-3 px-6 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productosTableBody" class="text-gray-600 text-sm font-light"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="categorias" class="page-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-800">Gestión de Categorías</h2>
+                    <button id="btnNuevaCategoria" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Nueva Categoría</button>
+                </div>
+                <div class="card">
+                    <div id="categoriasLoadingSpinner" class="hidden spinner"></div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white rounded-lg">
+                            <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <tr>
+                                    <th class="py-3 px-6 text-left">Nombre</th>
+                                    <th class="py-3 px-6 text-left">Descripción</th>
+                                    <th class="py-3 px-6 text-center">Estado</th>
+                                    <th class="py-3 px-6 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoriasTableBody" class="text-gray-600 text-sm font-light"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="proveedores" class="page-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-800">Gestión de Proveedores</h2>
+                    <button id="btnNuevoProveedor" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Nuevo Proveedor</button>
+                </div>
+                <div class="card">
+                    <div id="proveedoresLoadingSpinner" class="hidden spinner"></div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white rounded-lg">
+                            <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <tr>
+                                    <th class="py-3 px-6 text-left">Nombre</th>
+                                    <th class="py-3 px-6 text-left">Contacto</th>
+                                    <th class="py-3 px-6 text-left">Teléfono</th>
+                                    <th class="py-3 px-6 text-left">Email</th>
+                                    <th class="py-3 px-6 text-center">Estado</th>
+                                    <th class="py-3 px-6 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="proveedoresTableBody" class="text-gray-600 text-sm font-light"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="clientes" class="page-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-800">Gestión de Clientes</h2>
+                    <button id="btnNuevoCliente" class="btn btn-primary"><i class="fas fa-user-plus mr-2"></i> Nuevo Cliente</button>
+                </div>
+                <div class="card">
+                    <div id="clientesLoadingSpinner" class="hidden spinner"></div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white rounded-lg">
+                            <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <tr>
+                                    <th class="py-3 px-6 text-left">Nombre Completo</th>
+                                    <th class="py-3 px-6 text-left">Documento</th>
+                                    <th class="py-3 px-6 text-left">Teléfono</th>
+                                    <th class="py-3 px-6 text-left">Email</th>
+                                    <th class="py-3 px-6 text-center">Estado</th>
+                                    <th class="py-3 px-6 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientesTableBody" class="text-gray-600 text-sm font-light"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="usuarios" class="page-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-gray-800">Gestión de Usuarios</h2>
+                    <button id="btnNuevoUsuario" class="btn btn-primary"><i class="fas fa-user-plus mr-2"></i> Nuevo Usuario</button>
+                </div>
+                <div class="card">
+                    <div id="usuariosLoadingSpinner" class="hidden spinner"></div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white rounded-lg">
+                            <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                                <tr>
+                                    <th class="py-3 px-6 text-left">Nombre Completo</th>
+                                    <th class="py-3 px-6 text-left">Usuario</th>
+                                    <th class="py-3 px-6 text-left">Email</th>
+                                    <th class="py-3 px-6 text-center">Rol</th>
+                                    <th class="py-3 px-6 text-center">Estado</th>
+                                    <th class="py-3 px-6 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usuariosTableBody" class="text-gray-600 text-sm font-light"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="compras" class="page-section hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-semibold text-gray-800">Registro de Compras</h2><button class="btn btn-primary"><i class="fas fa-cart-plus mr-2"></i> Nueva Compra</button></div><div class="card"><p class="text-gray-600">Funcionalidad de Compras próximamente...</p></div></section>
+            <section id="ventas" class="page-section hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-semibold text-gray-800">Registro de Ventas</h2><button class="btn btn-primary"><i class="fas fa-cash-register mr-2"></i> Nueva Venta</button></div><div class="card"><p class="text-gray-600">Funcionalidad de Ventas próximamente...</p></div></section>
+            <section id="inventario" class="page-section hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-semibold text-gray-800">Movimientos de Inventario</h2><button class="btn btn-primary"><i class="fas fa-exchange-alt mr-2"></i> Nuevo Movimiento</button></div><div class="card"><p class="text-gray-600">Funcionalidad de Inventario próximamente...</p></div></section>
+            <section id="caja" class="page-section hidden"><div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-semibold text-gray-800">Gestión de Caja</h2><div><button class="btn btn-primary mr-2"><i class="fas fa-door-open mr-2"></i> Abrir Caja</button><button class="btn btn-secondary"><i class="fas fa-door-closed mr-2"></i> Cerrar Caja</button></div></div><div class="card"><p class="text-gray-600">Funcionalidad de Caja próximamente...</p></div></section>
+            
+        </main>
+    </div>
+
+    <div id="productoModal" class="modal fixed inset-0 bg-opacity-50 flex items-center justify-center p-4 hidden z-40">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="productoModalTitle" class="text-xl font-semibold text-gray-800"></h3>
+                <button id="btnCerrarModalProducto" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <form id="formProducto">
+                <input type="hidden" id="producto_id" name="producto_id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div><label for="codigo" class="form-label">Código <span class="text-red-500">*</span></label><input type="text" id="codigo" name="codigo" class="form-input" required></div>
+                    <div><label for="nombre" class="form-label">Nombre <span class="text-red-500">*</span></label><input type="text" id="nombre" name="nombre" class="form-input" required></div>
+                </div>
+                <div class="mb-4"><label for="descripcion" class="form-label">Descripción</label><textarea id="descripcion" name="descripcion" rows="3" class="form-textarea"></textarea></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div><label for="precio_costo" class="form-label">Precio Costo <span class="text-red-500">*</span></label><input type="number" id="precio_costo" name="precio_costo" step="0.01" class="form-input" required></div>
+                    <div><label for="precio_venta" class="form-label">Precio Venta <span class="text-red-500">*</span></label><input type="number" id="precio_venta" name="precio_venta" step="0.01" class="form-input" required></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div><label for="stock" class="form-label">Stock <span class="text-red-500">*</span></label><input type="number" id="stock" name="stock" class="form-input" required></div>
+                    <div><label for="stock_minimo" class="form-label">Stock Mínimo</label><input type="number" id="stock_minimo" name="stock_minimo" class="form-input" value="5"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div><label for="categoria_id" class="form-label">Categoría</label><select id="categoria_id" name="categoria_id" class="form-select"><option value="">Seleccione una categoría...</option></select></div>
+                    <div><label for="proveedor_id" class="form-label">Proveedor</label><select id="proveedor_id" name="proveedor_id" class="form-select"><option value="">Seleccione un proveedor...</option></select></div>
+                </div>
+                <div class="mb-4">
+                    <label for="imagen" class="form-label">URL de Imagen</label>
+                    <input type="text" id="imagen" name="imagen" class="form-input" placeholder="https://ejemplo.com/imagen.jpg">
+                    <img id="imagen_preview" src="#" alt="Previsualización de imagen" class="mt-2 rounded-md max-h-32 hidden"/>
+                </div>
+                <div class="mb-4">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select id="estado" name="estado" class="form-select">
+                        <option value="1" selected>Activo</option><option value="0">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="btnCancelarModalProducto" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="btnGuardarProducto" class="btn btn-primary">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="categoriaModal" class="modal fixed inset-0 bg-opacity-50 flex items-center justify-center p-4 hidden z-40">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-lg overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="categoriaModalTitle" class="text-xl font-semibold text-gray-800"></h3>
+                <button id="btnCerrarModalCategoria" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <form id="formCategoria">
+                <input type="hidden" id="form_categoria_id" name="categoria_id">
+                <div class="mb-4">
+                    <label for="form_categoria_nombre" class="form-label">Nombre <span class="text-red-500">*</span></label>
+                    <input type="text" id="form_categoria_nombre" name="nombre" class="form-input" required>
+                </div>
+                <div class="mb-4">
+                    <label for="form_categoria_descripcion" class="form-label">Descripción</label>
+                    <textarea id="form_categoria_descripcion" name="descripcion" rows="3" class="form-textarea"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="form_categoria_estado" class="form-label">Estado</label>
+                    <select id="form_categoria_estado" name="estado" class="form-select">
+                        <option value="1" selected>Activo</option>
+                        <option value="0">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="btnCancelarModalCategoria" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="btnGuardarCategoria" class="btn btn-primary">Guardar Categoría</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="proveedorModal" class="modal fixed inset-0 bg-opacity-50 flex items-center justify-center p-4 hidden z-40">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="proveedorModalTitle" class="text-xl font-semibold text-gray-800"></h3>
+                <button id="btnCerrarModalProveedor" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <form id="formProveedor">
+                <input type="hidden" id="form_proveedor_id" name="proveedor_id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="form_proveedor_nombre" class="form-label">Nombre <span class="text-red-500">*</span></label>
+                        <input type="text" id="form_proveedor_nombre" name="nombre" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="form_proveedor_contacto" class="form-label">Contacto</label>
+                        <input type="text" id="form_proveedor_contacto" name="contacto" class="form-input">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="form_proveedor_telefono" class="form-label">Teléfono</label>
+                        <input type="tel" id="form_proveedor_telefono" name="telefono" class="form-input">
+                    </div>
+                    <div>
+                        <label for="form_proveedor_email" class="form-label">Email</label>
+                        <input type="email" id="form_proveedor_email" name="email" class="form-input">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="form_proveedor_direccion" class="form-label">Dirección</label>
+                    <textarea id="form_proveedor_direccion" name="direccion" rows="3" class="form-textarea"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="form_proveedor_cuit" class="form-label">CUIT</label>
+                        <input type="text" id="form_proveedor_cuit" name="cuit" class="form-input">
+                    </div>
+                    <div>
+                        <label for="form_proveedor_estado" class="form-label">Estado</label>
+                        <select id="form_proveedor_estado" name="estado" class="form-select">
+                            <option value="1" selected>Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="btnCancelarModalProveedor" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="btnGuardarProveedor" class="btn btn-primary">Guardar Proveedor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="clienteModal" class="modal fixed inset-0 bg-opacity-50 flex items-center justify-center p-4 hidden z-40">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="clienteModalTitle" class="text-xl font-semibold text-gray-800"></h3>
+                <button id="btnCerrarModalCliente" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <form id="formCliente">
+                <input type="hidden" id="form_cliente_id" name="cliente_id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="form_cliente_nombre" class="form-label">Nombre <span class="text-red-500">*</span></label>
+                        <input type="text" id="form_cliente_nombre" name="nombre" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="form_cliente_apellido" class="form-label">Apellido <span class="text-red-500">*</span></label>
+                        <input type="text" id="form_cliente_apellido" name="apellido" class="form-input" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="form_cliente_documento" class="form-label">Documento</label>
+                        <input type="text" id="form_cliente_documento" name="documento" class="form-input">
+                    </div>
+                    <div>
+                        <label for="form_cliente_telefono" class="form-label">Teléfono</label>
+                        <input type="tel" id="form_cliente_telefono" name="telefono" class="form-input">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="form_cliente_email" class="form-label">Email</label>
+                    <input type="email" id="form_cliente_email" name="email" class="form-input">
+                </div>
+                <div class="mb-4">
+                    <label for="form_cliente_direccion" class="form-label">Dirección</label>
+                    <textarea id="form_cliente_direccion" name="direccion" rows="3" class="form-textarea"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="form_cliente_estado" class="form-label">Estado</label>
+                    <select id="form_cliente_estado" name="estado" class="form-select">
+                        <option value="1" selected>Activo</option>
+                        <option value="0">Inactivo</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="btnCancelarModalCliente" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="btnGuardarCliente" class="btn btn-primary">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="usuarioModal" class="modal fixed inset-0 bg-opacity-50 flex items-center justify-center p-4 hidden z-40">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="usuarioModalTitle" class="text-xl font-semibold text-gray-800"></h3>
+                <button id="btnCerrarModalUsuario" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            </div>
+            <form id="formUsuario">
+                <input type="hidden" id="form_usuario_id" name="usuario_id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="form_usuario_nombre" class="form-label">Nombre <span class="text-red-500">*</span></label>
+                        <input type="text" id="form_usuario_nombre" name="nombre" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="form_usuario_apellido" class="form-label">Apellido <span class="text-red-500">*</span></label>
+                        <input type="text" id="form_usuario_apellido" name="apellido" class="form-input" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="form_usuario_usuario" class="form-label">Usuario <span class="text-red-500">*</span></label>
+                        <input type="text" id="form_usuario_usuario" name="usuario" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="form_usuario_email" class="form-label">Email <span class="text-red-500">*</span></label>
+                        <input type="email" id="form_usuario_email" name="email" class="form-input" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="form_usuario_password" class="form-label">Contraseña <span id="passwordRequiredSpan" class="text-red-500">*</span></label>
+                        <input type="password" id="form_usuario_password" name="password" class="form-input">
+                        <small id="passwordHelp" class="text-xs text-gray-500">Dejar en blanco para no cambiar la contraseña actual (al editar).</small>
+                    </div>
+                    <div>
+                        <label for="form_usuario_password_confirm" class="form-label">Confirmar Contraseña <span id="passwordConfirmRequiredSpan" class="text-red-500">*</span></label>
+                        <input type="password" id="form_usuario_password_confirm" name="password_confirm" class="form-input">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="form_usuario_rol" class="form-label">Rol <span class="text-red-500">*</span></label>
+                        <select id="form_usuario_rol" name="rol" class="form-select" required>
+                            <option value="">Seleccione un rol...</option>
+                            <option value="1">Administrador</option>
+                            <option value="2">Vendedor</option>
+                            <option value="3">Repositor</option> 
+                            </select>
+                    </div>
+                    <div>
+                        <label for="form_usuario_estado" class="form-label">Estado</label>
+                        <select id="form_usuario_estado" name="estado" class="form-select">
+                            <option value="1" selected>Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="btnCancelarModalUsuario" class="btn btn-secondary">Cancelar</button>
+                    <button type="submit" id="btnGuardarUsuario" class="btn btn-primary">Guardar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Selectores Comunes ---
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pageSections = document.querySelectorAll('.page-section');
+            const pageTitle = document.getElementById('pageTitle');
+            const messageContainer = document.getElementById('messageContainer');
+
+            // --- Selectores para Productos ---
+            const productosTableBody = document.getElementById('productosTableBody');
+            const productosLoadingSpinner = document.getElementById('productosLoadingSpinner');
+            const btnNuevoProducto = document.getElementById('btnNuevoProducto');
+            const productoModal = document.getElementById('productoModal');
+            const productoModalTitle = document.getElementById('productoModalTitle');
+            const btnCerrarModalProducto = document.getElementById('btnCerrarModalProducto');
+            const btnCancelarModalProducto = document.getElementById('btnCancelarModalProducto');
+            const formProducto = document.getElementById('formProducto');
+            const categoriaSelect = document.getElementById('categoria_id'); 
+            const proveedorSelect = document.getElementById('proveedor_id'); 
+            const imagenInput = document.getElementById('imagen');
+            const imagenPreview = document.getElementById('imagen_preview');
+            const productoIdInput = document.getElementById('producto_id');
+
+            // --- Selectores para Categorías ---
+            const categoriasTableBody = document.getElementById('categoriasTableBody');
+            const categoriasLoadingSpinner = document.getElementById('categoriasLoadingSpinner');
+            const btnNuevaCategoria = document.getElementById('btnNuevaCategoria');
+            const categoriaModal = document.getElementById('categoriaModal');
+            const categoriaModalTitle = document.getElementById('categoriaModalTitle');
+            const btnCerrarModalCategoria = document.getElementById('btnCerrarModalCategoria');
+            const btnCancelarModalCategoria = document.getElementById('btnCancelarModalCategoria');
+            const formCategoria = document.getElementById('formCategoria');
+            const categoriaFormIdInput = document.getElementById('form_categoria_id'); 
+
+            // --- Selectores para Proveedores ---
+            const proveedoresTableBody = document.getElementById('proveedoresTableBody');
+            const proveedoresLoadingSpinner = document.getElementById('proveedoresLoadingSpinner');
+            const btnNuevoProveedor = document.getElementById('btnNuevoProveedor');
+            const proveedorModal = document.getElementById('proveedorModal');
+            const proveedorModalTitle = document.getElementById('proveedorModalTitle');
+            const btnCerrarModalProveedor = document.getElementById('btnCerrarModalProveedor');
+            const btnCancelarModalProveedor = document.getElementById('btnCancelarModalProveedor');
+            const formProveedor = document.getElementById('formProveedor');
+            const proveedorFormIdInput = document.getElementById('form_proveedor_id');
+
+            // --- Selectores para Clientes ---
+            const clientesTableBody = document.getElementById('clientesTableBody');
+            const clientesLoadingSpinner = document.getElementById('clientesLoadingSpinner');
+            const btnNuevoCliente = document.getElementById('btnNuevoCliente');
+            const clienteModal = document.getElementById('clienteModal');
+            const clienteModalTitle = document.getElementById('clienteModalTitle');
+            const btnCerrarModalCliente = document.getElementById('btnCerrarModalCliente');
+            const btnCancelarModalCliente = document.getElementById('btnCancelarModalCliente');
+            const formCliente = document.getElementById('formCliente');
+            const clienteFormIdInput = document.getElementById('form_cliente_id');
+
+            // --- Selectores para Usuarios (NUEVO) ---
+            const usuariosTableBody = document.getElementById('usuariosTableBody');
+            const usuariosLoadingSpinner = document.getElementById('usuariosLoadingSpinner');
+            const btnNuevoUsuario = document.getElementById('btnNuevoUsuario');
+            const usuarioModal = document.getElementById('usuarioModal');
+            const usuarioModalTitle = document.getElementById('usuarioModalTitle');
+            const btnCerrarModalUsuario = document.getElementById('btnCerrarModalUsuario');
+            const btnCancelarModalUsuario = document.getElementById('btnCancelarModalUsuario');
+            const formUsuario = document.getElementById('formUsuario');
+            const usuarioFormIdInput = document.getElementById('form_usuario_id');
+            const passwordRequiredSpan = document.getElementById('passwordRequiredSpan');
+            const passwordConfirmRequiredSpan = document.getElementById('passwordConfirmRequiredSpan');
+            const passwordHelp = document.getElementById('passwordHelp');
+
+
+            // --- Función para mostrar mensajes ---
+            function showMessage(message, type = 'success') {
+                const bgColor = type === 'success' ? 'bg-green-500' : (type === 'error' ? 'bg-red-500' : 'bg-blue-500');
+                const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-times-circle' : 'fa-info-circle');
+                messageContainer.innerHTML = 
+                    `<div class="${bgColor} text-white p-3 rounded-md shadow flex items-center transition-opacity duration-300 ease-in-out">
+                        <i class="fas ${icon} mr-2"></i>
+                        <span>${message}</span>
+                    </div>`;
+                setTimeout(() => {
+                    if (messageContainer.firstChild) messageContainer.firstChild.classList.add('opacity-0');
+                    setTimeout(() => { messageContainer.innerHTML = ''; }, 300);
+                }, 5000);
+            }
+
+            // --- Lógica de Navegación y Sidebar ---
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('sidebar-closed'));
+            }
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    navLinks.forEach(lnk => lnk.classList.remove('active-link'));
+                    this.classList.add('active-link');
+                    const targetId = this.getAttribute('href').substring(1);
+                    pageSections.forEach(section => section.classList.toggle('hidden', section.id !== targetId));
+                    pageTitle.textContent = this.querySelector('span') ? this.querySelector('span').textContent.trim() : this.textContent.trim();
+                    
+                    if (targetId === 'productos') cargarProductos();
+                    if (targetId === 'categorias') cargarCategorias();
+                    if (targetId === 'proveedores') cargarProveedores();
+                    if (targetId === 'clientes') cargarClientes();
+                    if (targetId === 'usuarios') cargarUsuarios(); // NUEVO
+
+                    if (window.innerWidth < 768 && !sidebar.classList.contains('sidebar-closed')) sidebar.classList.add('sidebar-closed');
+                });
+            });
+
+            const initialLink = document.querySelector('.nav-link[href="#dashboard"]');
+            if (initialLink) {
+                 initialLink.click();
+            }
+
+
+            // --- Lógica para Productos ---
+            async function cargarDatosParaSelectsProducto() { 
+                try {
+                    const response = await fetch('api/productos.php?accion=leer_select_data');
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        categoriaSelect.innerHTML = '<option value="">Seleccione una categoría...</option>';
+                        result.data.categorias.forEach(cat => {
+                            const option = document.createElement('option');
+                            option.value = cat.id; option.textContent = cat.nombre;
+                            categoriaSelect.appendChild(option);
+                        });
+                        proveedorSelect.innerHTML = '<option value="">Seleccione un proveedor...</option>';
+                        result.data.proveedores.forEach(prov => {
+                            const option = document.createElement('option');
+                            option.value = prov.id; option.textContent = prov.nombre;
+                            proveedorSelect.appendChild(option);
+                        });
+                    } else { showMessage(result.error || 'No se pudieron cargar datos para selects de producto.', 'error'); }
+                } catch (error) { showMessage(`Error de red al cargar datos para selects de producto: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            async function cargarProductos() {
+                if (!productosTableBody || !productosLoadingSpinner) return;
+                productosLoadingSpinner.classList.remove('hidden');
+                productosTableBody.innerHTML = ''; 
+                try {
+                    const response = await fetch('api/productos.php?accion=leer');
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    productosTableBody.innerHTML = ''; 
+                    if (result.success && Array.isArray(result.data)) {
+                        if (result.data.length === 0) {
+                            productosTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No hay productos registrados.</td></tr>';
+                        } else {
+                            result.data.forEach(p => {
+                                const tr = document.createElement('tr');
+                                tr.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                                tr.innerHTML = `
+                                    <td class="py-3 px-6 text-left whitespace-nowrap">${p.codigo || 'N/A'}</td>
+                                    <td class="py-3 px-6 text-left">${p.nombre || 'N/A'}</td>
+                                    <td class="py-3 px-6 text-center">${p.precio_venta ? '$' + parseFloat(p.precio_venta).toFixed(2) : 'N/A'}</td>
+                                    <td class="py-3 px-6 text-center">${p.stock !== null ? p.stock : 'N/A'}</td>
+                                    <td class="py-3 px-6 text-left">${p.categoria || '<em>Sin categoría</em>'}</td>
+                                    <td class="py-3 px-6 text-left">${p.proveedor || '<em>Sin proveedor</em>'}</td>
+                                    <td class="py-3 px-6 text-center"><span class="px-2 py-1 text-xs font-semibold rounded-full ${p.estado == 1 ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${p.estado == 1 ? 'Activo' : 'Inactivo'}</span></td>
+                                    <td class="py-3 px-6 text-center">
+                                        <div class="flex item-center justify-center space-x-2">
+                                            <button title="Editar" class="action-btn action-btn-edit action-btn-producto" data-action="editar" data-id="${p.id}"><i class="fas fa-edit"></i></button>
+                                            <button title="Eliminar" class="action-btn action-btn-delete action-btn-producto" data-action="eliminar" data-id="${p.id}"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </td>`;
+                                productosTableBody.appendChild(tr);
+                            });
+                        }
+                    } else { productosTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-500">Error: ${result.error || 'Respuesta inválida del servidor.'}</td></tr>`;}
+                } catch (error) { productosTableBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-500">Error de red al cargar productos: ${error.message}</td></tr>`; console.error(error);}
+                finally { productosLoadingSpinner.classList.add('hidden'); }
+            }
+
+            async function handleEditProducto(id) {
+                showMessage('Cargando datos del producto...', 'info');
+                try {
+                    await cargarDatosParaSelectsProducto(); 
+                    const response = await fetch(`api/productos.php?accion=leer_uno&id=${id}`);
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        const p = result.data;
+                        formProducto.reset();
+                        productoIdInput.value = p.id;
+                        document.getElementById('codigo').value = p.codigo || '';
+                        document.getElementById('nombre').value = p.nombre || '';
+                        document.getElementById('descripcion').value = p.descripcion || '';
+                        document.getElementById('precio_costo').value = p.precio_costo || '';
+                        document.getElementById('precio_venta').value = p.precio_venta || '';
+                        document.getElementById('stock').value = p.stock || '';
+                        document.getElementById('stock_minimo').value = p.stock_minimo || '5';
+                        categoriaSelect.value = p.categoria_id || '';
+                        proveedorSelect.value = p.proveedor_id || '';
+                        imagenInput.value = p.imagen || '';
+                        if (p.imagen && (p.imagen.startsWith('http://') || p.imagen.startsWith('https://'))) {
+                            imagenPreview.src = p.imagen; imagenPreview.classList.remove('hidden');
+                             imagenPreview.onerror = () => { imagenPreview.classList.add('hidden'); imagenPreview.src="#"; };
+                        } else { imagenPreview.classList.add('hidden'); imagenPreview.src="#"; }
+                        document.getElementById('estado').value = p.estado !== null ? p.estado.toString() : '1';
+                        
+                        productoModalTitle.textContent = 'Editar Producto';
+                        productoModal.classList.remove('hidden');
+                    } else { showMessage(result.error || 'No se pudo cargar el producto para editar.', 'error'); }
+                } catch (error) { showMessage(`Error de red al cargar producto: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            async function handleDeleteProducto(id) {
+                if (!window.confirm('¿Está seguro de que desea eliminar este producto? Esta acción no se puede deshacer.')) return;
+                try {
+                    const response = await fetch('api/productos.php?accion=eliminar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: parseInt(id) })
+                    });
+                    const result = await response.json(); 
+                    if (response.ok && result.success) {
+                        showMessage(result.message || 'Producto eliminado.', 'success');
+                        cargarProductos();
+                    } else { 
+                        throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) { showMessage(`Error al eliminar producto: ${error.message}`, 'error'); console.error(error); }
+            }
+            
+            if (btnNuevoProducto) {
+                btnNuevoProducto.addEventListener('click', () => {
+                    formProducto.reset();
+                    productoIdInput.value = ''; 
+                    productoModalTitle.textContent = 'Agregar Nuevo Producto';
+                    imagenPreview.classList.add('hidden');
+                    imagenPreview.src="#";
+                    cargarDatosParaSelectsProducto();
+                    productoModal.classList.remove('hidden');
+                });
+            }
+
+            function cerrarModalProducto() { productoModal.classList.add('hidden'); formProducto.reset(); imagenPreview.classList.add('hidden'); imagenPreview.src="#"; }
+            if (btnCerrarModalProducto) btnCerrarModalProducto.addEventListener('click', cerrarModalProducto);
+            if (btnCancelarModalProducto) btnCancelarModalProducto.addEventListener('click', cerrarModalProducto);
+
+            if(imagenInput && imagenPreview) {
+                imagenInput.addEventListener('input', function() {
+                    if (this.value && (this.value.startsWith('http://') || this.value.startsWith('https://'))) {
+                        imagenPreview.src = this.value;
+                        imagenPreview.classList.remove('hidden');
+                        imagenPreview.onerror = () => { imagenPreview.classList.add('hidden'); imagenPreview.src="#"; };
+                    } else { imagenPreview.classList.add('hidden'); imagenPreview.src="#"; }
+                });
+            }
+
+            if (formProducto) {
+                formProducto.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const formData = new FormData(this);
+                    const productoData = Object.fromEntries(formData.entries());
+                    
+                    productoData.precio_costo = parseFloat(productoData.precio_costo);
+                    productoData.precio_venta = parseFloat(productoData.precio_venta);
+                    productoData.stock = parseInt(productoData.stock, 10);
+                    productoData.stock_minimo = parseInt(productoData.stock_minimo, 10);
+                    productoData.estado = parseInt(productoData.estado, 10);
+                    productoData.categoria_id = productoData.categoria_id ? parseInt(productoData.categoria_id, 10) : null;
+                    productoData.proveedor_id = productoData.proveedor_id ? parseInt(productoData.proveedor_id, 10) : null;
+                    if(productoData.producto_id) productoData.producto_id = parseInt(productoData.producto_id, 10);
+                    else delete productoData.producto_id; 
+
+                    if (!productoData.codigo || !productoData.nombre || isNaN(productoData.precio_costo) || isNaN(productoData.precio_venta) || isNaN(productoData.stock)) {
+                        showMessage('Complete los campos obligatorios (*) correctamente.', 'error'); return;
+                    }
+
+                    const esEdicion = !!productoIdInput.value; 
+                    const url = 'api/productos.php?accion=' + (esEdicion ? 'actualizar' : 'crear');
+                    
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(productoData)
+                        });
+                        const result = await response.json();
+                        if (response.ok && result.success) {
+                            showMessage(result.message || `Producto ${esEdicion ? 'actualizado' : 'creado'}.`, 'success');
+                            cerrarModalProducto();
+                            cargarProductos();
+                        } else { 
+                            throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (error) { showMessage(`Error al guardar producto: ${error.message}`, 'error'); console.error(error); }
+                });
+            }
+            
+            if (productosTableBody) {
+                productosTableBody.addEventListener('click', function(event) {
+                    const target = event.target.closest('.action-btn-producto');
+                    if (!target) return;
+                    const action = target.dataset.action;
+                    const id = target.dataset.id;
+                    if (action === 'editar') handleEditProducto(id);
+                    else if (action === 'eliminar') handleDeleteProducto(id);
+                });
+            }
+
+            // --- Lógica para Categorías ---
+            async function cargarCategorias() {
+                if (!categoriasTableBody || !categoriasLoadingSpinner) return;
+                categoriasLoadingSpinner.classList.remove('hidden');
+                categoriasTableBody.innerHTML = '';
+                try {
+                    const response = await fetch('api/categorias.php?accion=leer');
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    categoriasTableBody.innerHTML = '';
+                    if (result.success && Array.isArray(result.data)) {
+                        if (result.data.length === 0) {
+                            categoriasTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No hay categorías registradas.</td></tr>';
+                        } else {
+                            result.data.forEach(cat => {
+                                const tr = document.createElement('tr');
+                                tr.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                                tr.innerHTML = `
+                                    <td class="py-3 px-6 text-left">${cat.nombre || 'N/A'}</td>
+                                    <td class="py-3 px-6 text-left">${cat.descripcion || '<em>Sin descripción</em>'}</td>
+                                    <td class="py-3 px-6 text-center"><span class="px-2 py-1 text-xs font-semibold rounded-full ${cat.estado == 1 ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${cat.estado == 1 ? 'Activa' : 'Inactiva'}</span></td>
+                                    <td class="py-3 px-6 text-center">
+                                        <div class="flex item-center justify-center space-x-2">
+                                            <button title="Editar" class="action-btn action-btn-edit action-btn-categoria" data-action="editar" data-id="${cat.id}"><i class="fas fa-edit"></i></button>
+                                            <button title="Eliminar" class="action-btn action-btn-delete action-btn-categoria" data-action="eliminar" data-id="${cat.id}"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </td>`;
+                                categoriasTableBody.appendChild(tr);
+                            });
+                        }
+                    } else { categoriasTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Error: ${result.error || 'Respuesta inválida del servidor.'}</td></tr>`; }
+                } catch (error) { categoriasTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Error de red al cargar categorías: ${error.message}</td></tr>`; console.error(error); }
+                finally { categoriasLoadingSpinner.classList.add('hidden'); }
+            }
+
+            async function handleEditCategoria(id) {
+                showMessage('Cargando datos de la categoría...', 'info');
+                try {
+                    const response = await fetch(`api/categorias.php?accion=leer_una&id=${id}`);
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        const cat = result.data;
+                        formCategoria.reset();
+                        categoriaFormIdInput.value = cat.id;
+                        document.getElementById('form_categoria_nombre').value = cat.nombre || '';
+                        document.getElementById('form_categoria_descripcion').value = cat.descripcion || '';
+                        document.getElementById('form_categoria_estado').value = cat.estado !== null ? cat.estado.toString() : '1';
+                        
+                        categoriaModalTitle.textContent = 'Editar Categoría';
+                        categoriaModal.classList.remove('hidden');
+                    } else { showMessage(result.error || 'No se pudo cargar la categoría para editar.', 'error'); }
+                } catch (error) { showMessage(`Error de red al cargar categoría: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            async function handleDeleteCategoria(id) {
+                if (!window.confirm('¿Está seguro de que desea eliminar esta categoría? Si está asignada a productos, no se podrá eliminar.')) return;
+                try {
+                    const response = await fetch('api/categorias.php?accion=eliminar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: parseInt(id) })
+                    });
+                    const result = await response.json();
+                     if (response.ok && result.success) {
+                        showMessage(result.message || 'Categoría eliminada.', 'success');
+                        cargarCategorias();
+                        cargarDatosParaSelectsProducto(); 
+                    } else { 
+                        throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) { showMessage(`Error al eliminar categoría: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            if (btnNuevaCategoria) {
+                btnNuevaCategoria.addEventListener('click', () => {
+                    formCategoria.reset();
+                    categoriaFormIdInput.value = ''; 
+                    categoriaModalTitle.textContent = 'Agregar Nueva Categoría';
+                    categoriaModal.classList.remove('hidden');
+                });
+            }
+
+            function cerrarModalCategoria() { categoriaModal.classList.add('hidden'); formCategoria.reset(); }
+            if (btnCerrarModalCategoria) btnCerrarModalCategoria.addEventListener('click', cerrarModalCategoria);
+            if (btnCancelarModalCategoria) btnCancelarModalCategoria.addEventListener('click', cerrarModalCategoria);
+
+            if (formCategoria) {
+                formCategoria.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const formData = new FormData(this);
+                    const categoriaData = Object.fromEntries(formData.entries());
+                    
+                    categoriaData.estado = parseInt(categoriaData.estado, 10);
+                    if (categoriaData.categoria_id) categoriaData.categoria_id = parseInt(categoriaData.categoria_id, 10);
+                    else delete categoriaData.categoria_id;
+
+                    if (!categoriaData.nombre) {
+                        showMessage('El nombre de la categoría es obligatorio.', 'error'); return;
+                    }
+
+                    const esEdicion = !!categoriaFormIdInput.value;
+                    const url = 'api/categorias.php?accion=' + (esEdicion ? 'actualizar' : 'crear');
+                    
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(categoriaData)
+                        });
+                        const result = await response.json();
+                         if (response.ok && result.success) {
+                            showMessage(result.message || `Categoría ${esEdicion ? 'actualizada' : 'creada'}.`, 'success');
+                            cerrarModalCategoria();
+                            cargarCategorias();
+                            cargarDatosParaSelectsProducto(); 
+                        } else { 
+                            throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (error) { showMessage(`Error al guardar categoría: ${error.message}`, 'error'); console.error(error); }
+                });
+            }
+
+            if (categoriasTableBody) {
+                categoriasTableBody.addEventListener('click', function(event) {
+                    const target = event.target.closest('.action-btn-categoria');
+                    if (!target) return;
+                    const action = target.dataset.action;
+                    const id = target.dataset.id;
+                    if (action === 'editar') handleEditCategoria(id);
+                    else if (action === 'eliminar') handleDeleteCategoria(id);
+                });
+            }
+
+            // --- Lógica para Proveedores ---
+            async function cargarProveedores() {
+                if (!proveedoresTableBody || !proveedoresLoadingSpinner) return;
+                proveedoresLoadingSpinner.classList.remove('hidden');
+                proveedoresTableBody.innerHTML = '';
+                try {
+                    const response = await fetch('api/proveedores.php?accion=leer');
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    proveedoresTableBody.innerHTML = '';
+                    if (result.success && Array.isArray(result.data)) {
+                        if (result.data.length === 0) {
+                            proveedoresTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No hay proveedores registrados.</td></tr>';
+                        } else {
+                            result.data.forEach(prov => {
+                                const tr = document.createElement('tr');
+                                tr.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                                tr.innerHTML = `
+                                    <td class="py-3 px-6 text-left">${prov.nombre || 'N/A'}</td>
+                                    <td class="py-3 px-6 text-left">${prov.contacto || '<em>N/A</em>'}</td>
+                                    <td class="py-3 px-6 text-left">${prov.telefono || '<em>N/A</em>'}</td>
+                                    <td class="py-3 px-6 text-left">${prov.email || '<em>N/A</em>'}</td>
+                                    <td class="py-3 px-6 text-center"><span class="px-2 py-1 text-xs font-semibold rounded-full ${prov.estado == 1 ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${prov.estado == 1 ? 'Activo' : 'Inactivo'}</span></td>
+                                    <td class="py-3 px-6 text-center">
+                                        <div class="flex item-center justify-center space-x-2">
+                                            <button title="Editar" class="action-btn action-btn-edit action-btn-proveedor" data-action="editar" data-id="${prov.id}"><i class="fas fa-edit"></i></button>
+                                            <button title="Eliminar" class="action-btn action-btn-delete action-btn-proveedor" data-action="eliminar" data-id="${prov.id}"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </td>`;
+                                proveedoresTableBody.appendChild(tr);
+                            });
+                        }
+                    } else { proveedoresTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-500">Error: ${result.error || 'Respuesta inválida del servidor.'}</td></tr>`; }
+                } catch (error) { proveedoresTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-500">Error de red al cargar proveedores: ${error.message}</td></tr>`; console.error(error); }
+                finally { proveedoresLoadingSpinner.classList.add('hidden'); }
+            }
+
+            async function handleEditProveedor(id) {
+                showMessage('Cargando datos del proveedor...', 'info');
+                try {
+                    const response = await fetch(`api/proveedores.php?accion=leer_uno&id=${id}`);
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        const prov = result.data;
+                        formProveedor.reset();
+                        proveedorFormIdInput.value = prov.id;
+                        document.getElementById('form_proveedor_nombre').value = prov.nombre || '';
+                        document.getElementById('form_proveedor_contacto').value = prov.contacto || '';
+                        document.getElementById('form_proveedor_telefono').value = prov.telefono || '';
+                        document.getElementById('form_proveedor_email').value = prov.email || '';
+                        document.getElementById('form_proveedor_direccion').value = prov.direccion || '';
+                        document.getElementById('form_proveedor_cuit').value = prov.cuit || '';
+                        document.getElementById('form_proveedor_estado').value = prov.estado !== null ? prov.estado.toString() : '1';
+                        
+                        proveedorModalTitle.textContent = 'Editar Proveedor';
+                        proveedorModal.classList.remove('hidden');
+                    } else { showMessage(result.error || 'No se pudo cargar el proveedor para editar.', 'error'); }
+                } catch (error) { showMessage(`Error de red al cargar proveedor: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            async function handleDeleteProveedor(id) {
+                if (!window.confirm('¿Está seguro de que desea eliminar este proveedor? Los productos asociados ya no tendrán este proveedor asignado.')) return;
+                try {
+                    const response = await fetch('api/proveedores.php?accion=eliminar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: parseInt(id) })
+                    });
+                    const result = await response.json();
+                     if (response.ok && result.success) {
+                        showMessage(result.message || 'Proveedor eliminado.', 'success');
+                        cargarProveedores();
+                        cargarDatosParaSelectsProducto(); 
+                    } else { 
+                        throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) { showMessage(`Error al eliminar proveedor: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            if (btnNuevoProveedor) {
+                btnNuevoProveedor.addEventListener('click', () => {
+                    formProveedor.reset();
+                    proveedorFormIdInput.value = ''; 
+                    proveedorModalTitle.textContent = 'Agregar Nuevo Proveedor';
+                    proveedorModal.classList.remove('hidden');
+                });
+            }
+
+            function cerrarModalProveedor() { proveedorModal.classList.add('hidden'); formProveedor.reset(); }
+            if (btnCerrarModalProveedor) btnCerrarModalProveedor.addEventListener('click', cerrarModalProveedor);
+            if (btnCancelarModalProveedor) btnCancelarModalProveedor.addEventListener('click', cerrarModalProveedor);
+
+            if (formProveedor) {
+                formProveedor.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const formData = new FormData(this);
+                    const proveedorData = Object.fromEntries(formData.entries());
+                    
+                    proveedorData.estado = parseInt(proveedorData.estado, 10);
+                    if (proveedorData.proveedor_id) proveedorData.proveedor_id = parseInt(proveedorData.proveedor_id, 10);
+                    else delete proveedorData.proveedor_id;
+
+                    if (!proveedorData.nombre) {
+                        showMessage('El nombre del proveedor es obligatorio.', 'error'); return;
+                    }
+
+                    const esEdicion = !!proveedorFormIdInput.value;
+                    const url = 'api/proveedores.php?accion=' + (esEdicion ? 'actualizar' : 'crear');
+                    
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(proveedorData)
+                        });
+                        const result = await response.json();
+                         if (response.ok && result.success) {
+                            showMessage(result.message || `Proveedor ${esEdicion ? 'actualizado' : 'creado'}.`, 'success');
+                            cerrarModalProveedor();
+                            cargarProveedores();
+                            cargarDatosParaSelectsProducto(); 
+                        } else { 
+                            throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (error) { showMessage(`Error al guardar proveedor: ${error.message}`, 'error'); console.error(error); }
+                });
+            }
+
+            if (proveedoresTableBody) {
+                proveedoresTableBody.addEventListener('click', function(event) {
+                    const target = event.target.closest('.action-btn-proveedor');
+                    if (!target) return;
+                    const action = target.dataset.action;
+                    const id = target.dataset.id;
+                    if (action === 'editar') handleEditProveedor(id);
+                    else if (action === 'eliminar') handleDeleteProveedor(id);
+                });
+            }
+
+            // --- Lógica para Clientes ---
+            async function cargarClientes() {
+                if (!clientesTableBody || !clientesLoadingSpinner) return;
+                clientesLoadingSpinner.classList.remove('hidden');
+                clientesTableBody.innerHTML = '';
+                try {
+                    const response = await fetch('api/clientes.php?accion=leer');
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    clientesTableBody.innerHTML = '';
+                    if (result.success && Array.isArray(result.data)) {
+                        if (result.data.length === 0) {
+                            clientesTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No hay clientes registrados.</td></tr>';
+                        } else {
+                            result.data.forEach(cli => {
+                                const tr = document.createElement('tr');
+                                tr.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                                tr.innerHTML = `
+                                    <td class="py-3 px-6 text-left">${cli.apellido || ''}, ${cli.nombre || 'N/A'}</td>
+                                    <td class="py-3 px-6 text-left">${cli.documento || '<em>N/A</em>'}</td>
+                                    <td class="py-3 px-6 text-left">${cli.telefono || '<em>N/A</em>'}</td>
+                                    <td class="py-3 px-6 text-left">${cli.email || '<em>N/A</em>'}</td>
+                                    <td class="py-3 px-6 text-center"><span class="px-2 py-1 text-xs font-semibold rounded-full ${cli.estado == 1 ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${cli.estado == 1 ? 'Activo' : 'Inactivo'}</span></td>
+                                    <td class="py-3 px-6 text-center">
+                                        <div class="flex item-center justify-center space-x-2">
+                                            <button title="Editar" class="action-btn action-btn-edit action-btn-cliente" data-action="editar" data-id="${cli.id}"><i class="fas fa-edit"></i></button>
+                                            <button title="Eliminar" class="action-btn action-btn-delete action-btn-cliente" data-action="eliminar" data-id="${cli.id}"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </td>`;
+                                clientesTableBody.appendChild(tr);
+                            });
+                        }
+                    } else { clientesTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-500">Error: ${result.error || 'Respuesta inválida del servidor.'}</td></tr>`; }
+                } catch (error) { clientesTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-500">Error de red al cargar clientes: ${error.message}</td></tr>`; console.error(error); }
+                finally { clientesLoadingSpinner.classList.add('hidden'); }
+            }
+
+            async function handleEditCliente(id) {
+                showMessage('Cargando datos del cliente...', 'info');
+                try {
+                    const response = await fetch(`api/clientes.php?accion=leer_uno&id=${id}`);
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        const cli = result.data;
+                        formCliente.reset();
+                        clienteFormIdInput.value = cli.id;
+                        document.getElementById('form_cliente_nombre').value = cli.nombre || '';
+                        document.getElementById('form_cliente_apellido').value = cli.apellido || '';
+                        document.getElementById('form_cliente_documento').value = cli.documento || '';
+                        document.getElementById('form_cliente_telefono').value = cli.telefono || '';
+                        document.getElementById('form_cliente_email').value = cli.email || '';
+                        document.getElementById('form_cliente_direccion').value = cli.direccion || '';
+                        document.getElementById('form_cliente_estado').value = cli.estado !== null ? cli.estado.toString() : '1';
+                        
+                        clienteModalTitle.textContent = 'Editar Cliente';
+                        clienteModal.classList.remove('hidden');
+                    } else { showMessage(result.error || 'No se pudo cargar el cliente para editar.', 'error'); }
+                } catch (error) { showMessage(`Error de red al cargar cliente: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            async function handleDeleteCliente(id) {
+                if (!window.confirm('¿Está seguro de que desea eliminar este cliente? Las ventas asociadas perderán la referencia a este cliente.')) return;
+                try {
+                    const response = await fetch('api/clientes.php?accion=eliminar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: parseInt(id) })
+                    });
+                    const result = await response.json();
+                     if (response.ok && result.success) {
+                        showMessage(result.message || 'Cliente eliminado.', 'success');
+                        cargarClientes();
+                    } else { 
+                        throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) { showMessage(`Error al eliminar cliente: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            if (btnNuevoCliente) {
+                btnNuevoCliente.addEventListener('click', () => {
+                    formCliente.reset();
+                    clienteFormIdInput.value = ''; 
+                    clienteModalTitle.textContent = 'Agregar Nuevo Cliente';
+                    clienteModal.classList.remove('hidden');
+                });
+            }
+
+            function cerrarModalCliente() { clienteModal.classList.add('hidden'); formCliente.reset(); }
+            if (btnCerrarModalCliente) btnCerrarModalCliente.addEventListener('click', cerrarModalCliente);
+            if (btnCancelarModalCliente) btnCancelarModalCliente.addEventListener('click', cerrarModalCliente);
+
+            if (formCliente) {
+                formCliente.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const formData = new FormData(this);
+                    const clienteData = Object.fromEntries(formData.entries());
+                    
+                    clienteData.estado = parseInt(clienteData.estado, 10);
+                    if (clienteData.cliente_id) clienteData.cliente_id = parseInt(clienteData.cliente_id, 10);
+                    else delete clienteData.cliente_id;
+
+                    if (!clienteData.nombre || !clienteData.apellido) {
+                        showMessage('El nombre y apellido del cliente son obligatorios.', 'error'); return;
+                    }
+
+                    const esEdicion = !!clienteFormIdInput.value;
+                    const url = 'api/clientes.php?accion=' + (esEdicion ? 'actualizar' : 'crear');
+                    
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(clienteData)
+                        });
+                        const result = await response.json();
+                         if (response.ok && result.success) {
+                            showMessage(result.message || `Cliente ${esEdicion ? 'actualizado' : 'creado'}.`, 'success');
+                            cerrarModalCliente();
+                            cargarClientes();
+                        } else { 
+                            throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (error) { showMessage(`Error al guardar cliente: ${error.message}`, 'error'); console.error(error); }
+                });
+            }
+
+            if (clientesTableBody) {
+                clientesTableBody.addEventListener('click', function(event) {
+                    const target = event.target.closest('.action-btn-cliente');
+                    if (!target) return;
+                    const action = target.dataset.action;
+                    const id = target.dataset.id;
+                    if (action === 'editar') handleEditCliente(id);
+                    else if (action === 'eliminar') handleDeleteCliente(id);
+                });
+            }
+
+            // --- Lógica para Usuarios (NUEVO) ---
+            function getRolNombre(rolId) {
+                switch (parseInt(rolId)) {
+                    case 1: return 'Administrador';
+                    case 2: return 'Vendedor';
+                    case 3: return 'Repositor'; // Ajustar si tienes otros roles
+                    default: return 'Desconocido';
+                }
+            }
+
+            async function cargarUsuarios() {
+                if (!usuariosTableBody || !usuariosLoadingSpinner) return;
+                usuariosLoadingSpinner.classList.remove('hidden');
+                usuariosTableBody.innerHTML = '';
+                try {
+                    const response = await fetch('api/usuarios.php?accion=leer');
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    usuariosTableBody.innerHTML = '';
+                    if (result.success && Array.isArray(result.data)) {
+                        if (result.data.length === 0) {
+                            usuariosTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No hay usuarios registrados.</td></tr>';
+                        } else {
+                            result.data.forEach(u => {
+                                const tr = document.createElement('tr');
+                                tr.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                                tr.innerHTML = `
+                                    <td class="py-3 px-6 text-left">${u.apellido || ''}, ${u.nombre || 'N/A'}</td>
+                                    <td class="py-3 px-6 text-left">${u.usuario || 'N/A'}</td>
+                                    <td class="py-3 px-6 text-left">${u.email || 'N/A'}</td>
+                                    <td class="py-3 px-6 text-center">${getRolNombre(u.rol)}</td>
+                                    <td class="py-3 px-6 text-center"><span class="px-2 py-1 text-xs font-semibold rounded-full ${u.estado == 1 ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${u.estado == 1 ? 'Activo' : 'Inactivo'}</span></td>
+                                    <td class="py-3 px-6 text-center">
+                                        <div class="flex item-center justify-center space-x-2">
+                                            <button title="Editar" class="action-btn action-btn-edit action-btn-usuario" data-action="editar" data-id="${u.id}"><i class="fas fa-edit"></i></button>
+                                            ${u.id !== 1 ? `<button title="Eliminar" class="action-btn action-btn-delete action-btn-usuario" data-action="eliminar" data-id="${u.id}"><i class="fas fa-trash"></i></button>` : '<div class="w-9 h-9"></div>' } 
+                                        </div>
+                                    </td>`; // No mostrar botón de eliminar para usuario ID 1
+                                usuariosTableBody.appendChild(tr);
+                            });
+                        }
+                    } else { usuariosTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-500">Error: ${result.error || 'Respuesta inválida del servidor.'}</td></tr>`; }
+                } catch (error) { usuariosTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-red-500">Error de red al cargar usuarios: ${error.message}</td></tr>`; console.error(error); }
+                finally { usuariosLoadingSpinner.classList.add('hidden'); }
+            }
+
+            async function handleEditUsuario(id) {
+                showMessage('Cargando datos del usuario...', 'info');
+                try {
+                    const response = await fetch(`api/usuarios.php?accion=leer_uno&id=${id}`);
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        const u = result.data;
+                        formUsuario.reset();
+                        usuarioFormIdInput.value = u.id;
+                        document.getElementById('form_usuario_nombre').value = u.nombre || '';
+                        document.getElementById('form_usuario_apellido').value = u.apellido || '';
+                        document.getElementById('form_usuario_usuario').value = u.usuario || '';
+                        document.getElementById('form_usuario_email').value = u.email || '';
+                        document.getElementById('form_usuario_rol').value = u.rol || '';
+                        document.getElementById('form_usuario_estado').value = u.estado !== null ? u.estado.toString() : '1';
+                        
+                        // Contraseña no se carga, se deja en blanco para no cambiarla o se ingresa una nueva
+                        document.getElementById('form_usuario_password').value = '';
+                        document.getElementById('form_usuario_password_confirm').value = '';
+                        passwordRequiredSpan.classList.add('hidden'); // No es requerida al editar, a menos que se ingrese una nueva
+                        passwordConfirmRequiredSpan.classList.add('hidden');
+                        passwordHelp.classList.remove('hidden');
+
+
+                        usuarioModalTitle.textContent = 'Editar Usuario';
+                        usuarioModal.classList.remove('hidden');
+                    } else { showMessage(result.error || 'No se pudo cargar el usuario para editar.', 'error'); }
+                } catch (error) { showMessage(`Error de red al cargar usuario: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            async function handleDeleteUsuario(id) {
+                if (parseInt(id) === 1) {
+                    showMessage('No se puede eliminar el administrador principal del sistema.', 'error');
+                    return;
+                }
+                if (!window.confirm('¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer.')) return;
+                
+                try {
+                    const response = await fetch('api/usuarios.php?accion=eliminar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: parseInt(id) })
+                    });
+                    const result = await response.json();
+                     if (response.ok && result.success) {
+                        showMessage(result.message || 'Usuario eliminado.', 'success');
+                        cargarUsuarios();
+                    } else { 
+                        throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) { showMessage(`Error al eliminar usuario: ${error.message}`, 'error'); console.error(error); }
+            }
+
+            if (btnNuevoUsuario) {
+                btnNuevoUsuario.addEventListener('click', () => {
+                    formUsuario.reset();
+                    usuarioFormIdInput.value = ''; 
+                    usuarioModalTitle.textContent = 'Agregar Nuevo Usuario';
+                    passwordRequiredSpan.classList.remove('hidden'); // Requerida al crear
+                    passwordConfirmRequiredSpan.classList.remove('hidden'); // Requerida al crear
+                    passwordHelp.classList.add('hidden');
+                    document.getElementById('form_usuario_password').required = true;
+                    document.getElementById('form_usuario_password_confirm').required = true;
+                    usuarioModal.classList.remove('hidden');
+                });
+            }
+
+            function cerrarModalUsuario() { 
+                usuarioModal.classList.add('hidden'); 
+                formUsuario.reset(); 
+                document.getElementById('form_usuario_password').required = false; // Reset required status
+                document.getElementById('form_usuario_password_confirm').required = false;
+            }
+            if (btnCerrarModalUsuario) btnCerrarModalUsuario.addEventListener('click', cerrarModalUsuario);
+            if (btnCancelarModalUsuario) btnCancelarModalUsuario.addEventListener('click', cerrarModalUsuario);
+
+            if (formUsuario) {
+                formUsuario.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    const formData = new FormData(this);
+                    const usuarioData = Object.fromEntries(formData.entries());
+                    
+                    const esEdicion = !!usuarioFormIdInput.value;
+
+                    // Validaciones de contraseña
+                    if (!esEdicion || (esEdicion && usuarioData.password)) { // Si es creación O si es edición Y se ingresó contraseña
+                        if (usuarioData.password !== usuarioData.password_confirm) {
+                            showMessage('Las contraseñas no coinciden.', 'error');
+                            return;
+                        }
+                        if (usuarioData.password.length < 6 && !esEdicion) { // Mínimo 6 caracteres para nueva contraseña
+                             showMessage('La contraseña debe tener al menos 6 caracteres.', 'error');
+                             return;
+                        }
+                         document.getElementById('form_usuario_password').required = true;
+                         document.getElementById('form_usuario_password_confirm').required = true;
+                    } else { // Es edición y no se ingresó contraseña
+                        delete usuarioData.password; // No enviar contraseña vacía al backend
+                        delete usuarioData.password_confirm;
+                        document.getElementById('form_usuario_password').required = false;
+                        document.getElementById('form_usuario_password_confirm').required = false;
+                    }
+                    
+                    usuarioData.rol = parseInt(usuarioData.rol, 10);
+                    usuarioData.estado = parseInt(usuarioData.estado, 10);
+                    if (usuarioData.usuario_id) usuarioData.usuario_id = parseInt(usuarioData.usuario_id, 10);
+                    else delete usuarioData.usuario_id;
+
+                    if (!usuarioData.nombre || !usuarioData.apellido || !usuarioData.usuario || !usuarioData.email || isNaN(usuarioData.rol)) {
+                        showMessage('Complete los campos obligatorios (*) correctamente.', 'error'); return;
+                    }
+                    
+                    const url = 'api/usuarios.php?accion=' + (esEdicion ? 'actualizar' : 'crear');
+                    
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(usuarioData)
+                        });
+                        const result = await response.json();
+                         if (response.ok && result.success) {
+                            showMessage(result.message || `Usuario ${esEdicion ? 'actualizado' : 'creado'}.`, 'success');
+                            cerrarModalUsuario();
+                            cargarUsuarios();
+                        } else { 
+                            throw new Error(result.error || `Error HTTP ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (error) { showMessage(`Error al guardar usuario: ${error.message}`, 'error'); console.error(error); }
+                });
+            }
+
+            if (usuariosTableBody) {
+                usuariosTableBody.addEventListener('click', function(event) {
+                    const target = event.target.closest('.action-btn-usuario');
+                    if (!target) return;
+                    const action = target.dataset.action;
+                    const id = target.dataset.id;
+                    if (action === 'editar') handleEditUsuario(id);
+                    else if (action === 'eliminar') handleDeleteUsuario(id);
+                });
+            }
+
+        }); // Fin DOMContentLoaded
+    </script>
+</body>
+</html>
